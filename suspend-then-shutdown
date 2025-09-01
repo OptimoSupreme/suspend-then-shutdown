@@ -1,20 +1,16 @@
 #!/bin/sh
-# Shutdown after being suspended for DELAY_SECS.
-# Logs to the journal with tag 'suspend-then-shutdown'.
+# Shutdown after being suspended for DELAY_SECS (systemd sleep hook).
 
-# DELAY_SECS=2700            # 45 minutes
-# DELAY_SECS=7200            #  2 hours
-DELAY_SECS=14400             #  4 hours
-# DELAY_SECS=28800           #  8 hours
-# DELAY_SECS=                #  Custom
+# DELAY_SECS=2700    # 45 minutes
+# DELAY_SECS=7200    #  2 hours
+DELAY_SECS=14400   #  4 hours
+# DELAY_SECS=28800   #  8 hours
+# DELAY_SECS=        #  Custom
 
 STAMP=/run/rtcwake_until
-TAG=suspend-then-shutdown
-
-log(){ logger -t "$TAG" "$*"; }
 
 # returns 0 if on AC (skip shutdown), 1 if on battery
-on_ac(){
+on_ac() {
   if command -v on_ac_power >/dev/null 2>&1; then
     on_ac_power
     return $?
@@ -26,36 +22,24 @@ case "$2" in
   suspend|hybrid-sleep)
     case "$1" in
       pre)
+        [ -n "$DELAY_SECS" ] || exit 0
         if rtcwake -m no -s "$DELAY_SECS" >/dev/null 2>&1; then
           now=$(date +%s)
-          echo $((now + DELAY_SECS)) > "$STAMP"
-          log "armed: wake+shutdown after ${DELAY_SECS}s (until=$(cat $STAMP))"
-        else
-          log "rtcwake failed; not arming"
+          printf '%s\n' "$((now + DELAY_SECS))" > "$STAMP"
         fi
         ;;
       post)
-        # Clear alarms on RTCs
         for f in /sys/class/rtc/rtc*/wakealarm; do echo 0 2>/dev/null > "$f"; done
-
         if [ -f "$STAMP" ]; then
-          until=$(cat "$STAMP" 2>/dev/null || echo 0)
+          read -r until < "$STAMP" 2>/dev/null || until=0
           rm -f "$STAMP"
           now=$(date +%s)
-
-          # 10-minute tolerance window to handle slow resumes/clock skew
+          # 10-minute tolerance window
           if [ "$now" -ge "$until" ] && [ $((now - until)) -le 600 ]; then
-            if on_ac; then
-              log "deadline reached but on AC; skipping shutdown"
-            else
-              log "deadline reached; scheduling poweroff"
-              systemd-run --unit=auto-shutdown --on-active=5s /usr/bin/systemctl poweroff
+            if ! on_ac; then
+              systemd-run --unit=auto-shutdown --on-active=5s systemctl poweroff
             fi
-          else
-            log "resume before deadline (now=$now, until=$until); cancelling"
           fi
-        else
-          log "no STAMP found; nothing to do"
         fi
         ;;
     esac
