@@ -35,7 +35,7 @@ case "$2" in
         fi
         ;;
       post)
-        # Clear any lingering alarms on all RTCs
+        # Clear alarms on RTCs
         for f in /sys/class/rtc/rtc*/wakealarm; do echo 0 2>/dev/null > "$f"; done
 
         if [ -f "$STAMP" ]; then
