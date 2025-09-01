@@ -4,7 +4,7 @@
 
 # DELAY_SECS=2700            # 45 minutes
 # DELAY_SECS=7200            #  2 hours
-# DELAY_SECS=14400           #  4 hours
+DELAY_SECS=14400             #  4 hours
 # DELAY_SECS=28800           #  8 hours
 # DELAY_SECS=                #  Custom
 
