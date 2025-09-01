@@ -10,3 +10,5 @@ sudo install -m 755 -o root -g root suspend-then-shutdown /usr/lib/systemd/syste
 Must use systemd, install path differs between distros.
 Debian/Ubuntu/Mint: /lib/systemd/system-sleep/
 Fedora/Arch/openSUSE: /usr/lib/systemd/system-sleep/
+
+Default timer is 4 hours, adjust as needed.
