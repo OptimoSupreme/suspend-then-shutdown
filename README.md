@@ -6,3 +6,7 @@ Tiny systemd sleep hook that wakes after a set delay and powers off automaticall
 ```
 sudo install -m 755 -o root -g root suspend-then-shutdown /usr/lib/systemd/system-sleep/suspend-then-shutdown
 ```
+
+Must use systemd, install path differs between distros.
+Debian/Ubuntu/Mint: /lib/systemd/system-sleep/
+Fedora/Arch/openSUSE: /usr/lib/systemd/system-sleep/
